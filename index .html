@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nascional Maquinas  Ponto Eletrônico</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --success: #16a34a;
+            --bg: #f8fafc;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        
+        h2 { color: var(--primary); border-bottom: 2px solid var(--bg); padding-bottom: 10px; }
+        
+        .form-group { margin-bottom: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .full-width { grid-column: span 2; }
+        
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        
+        .btn-save { background-color: var(--success); color: white; }
+        .btn-report { background-color: var(--secondary); color: white; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        #relatorio { margin-top: 30px; display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
+        th, td { border: 1px solid #eee; padding: 10px; text-align: left; }
+        th { background-color: var(--primary); color: white; }
+        tr:nth-child(even) { background-color: #fcfcfc; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Registro de Ponto Diário</h2>
+    
+    <div class="form-group">
+        <div class="full-width">
+            <label>Nome do Funcionário</label>
+            <input type="text" id="nome" placeholder="Digite o nome completo">
+        </div>
+        <div>
+            <label>Data</label>
+            <input type="date" id="data">
+        </div>
+        <div>
+            <label>Entrada Manhã</label>
+            <input type="time" id="entrada">
+        </div>
+        <div>
+            <label>Saída Almoço</label>
+            <input type="time" id="saidaAlmoco">
+        </div>
+        <div>
+            <label>Retorno Almoço</label>
+            <input type="time" id="entradaAlmoco">
+        </div>
+        <div class="full-width">
+            <label>Saída Final</label>
+            <input type="time" id="saida">
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button class="btn-save" onclick="salvarPonto()">Salvar Registro</button>
+        <button class="btn-report" onclick="gerarRelatorio()">Gerar Relatório Mensal</button>
+    </div>
+
+    <div id="relatorio">
+        <h3>Relatório de Frequência</h3>
+        <table id="tabelaRelatorio">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Funcionário</th>
+                    <th>Entrada</th>
+                    <th>S. Almoço</th>
+                    <th>E. Almoço</th>
+                    <th>Saída</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Define a data de hoje como padrão
+    document.getElementById('data').valueAsDate = new Date();
+
+    function salvarPonto() {
+        const registro = {
+            nome: document.getElementById('nome').value,
+            data: document.getElementById('data').value,
+            entrada: document.getElementById('entrada').value,
+            saidaAlmoco: document.getElementById('saidaAlmoco').value,
+            entradaAlmoco: document.getElementById('entradaAlmoco').value,
+            saida: document.getElementById('saida').value
+        };
+
+        if(!registro.nome || !registro.data) {
+            alert("Por favor, preencha o nome e a data.");
+            return;
+        }
+
+        // Recupera registros existentes ou cria um novo array
+        let pontos = JSON.parse(localStorage.getItem('pontosEletronicos') || '[]');
+        pontos.push(registro);
+        
+        // Salva no LocalStorage do navegador
+        localStorage.setItem('pontosEletronicos', JSON.stringify(pontos));
+        
+        alert("Ponto registrado com sucesso!");
+        limparCampos();
+    }
+
+    function gerarRelatorio() {
+        const pontos = JSON.parse(localStorage.getItem('pontosEletronicos') || '[]');
+        const tbody = document.querySelector('#tabelaRelatorio tbody');
+        tbody.innerHTML = '';
+
+        if(pontos.length === 0) {
+            alert("Nenhum registro encontrado.");
+            return;
+        }
+
+        // Ordenar por data
+        pontos.sort((a, b) => new Date(a.data) - new Date(b.data));
+
+        pontos.forEach(p => {
+            const row = `<tr>
+                <td>${p.data.split('-').reverse().join('/')}</td>
+                <td>${p.nome}</td>
+                <td>${p.entrada}</td>
+                <td>${p.saidaAlmoco}</td>
+                <td>${p.entradaAlmoco}</td>
+                <td>${p.saida}</td>
+            </tr>`;
+            tbody.innerHTML += row;
+        });
+
+        document.getElementById('relatorio').style.display = 'block';
+    }
+
+    function limparCampos() {
+        document.getElementById('entrada').value = '';
+        document.getElementById('saidaAlmoco').value = '';
+        document.getElementById('entradaAlmoco').value = '';
+        document.getElementById('saida').value = '';
+    }
+</script>
+
+</body>
+</html>
